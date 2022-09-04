@@ -2,10 +2,10 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 
-export const fetchPost = createAsyncThunk('fetch/post', async (params) => {
+const fetchPost = createAsyncThunk('fetch/post', async (params: string) => {
     try {
             const { data } = await axios.get('https://registry.npmjs.org/-/v1/search', { params: { text: params } })
-            data.objects.map((result: any) => {
+            return data.objects.map((result: any) => {
                 return result.package.name; 
             });
         } catch (err: any) {
@@ -30,22 +30,22 @@ const initialRepoState:RepositoriesState = {
 const repositorySlice = createSlice({
     name: 'repo-slice',
     initialState: initialRepoState,
-    reducers: {
-        
-    },
-    extraReducers: {
-        [fetchPost.pending]: (state: RepositoriesState) => {
+    reducers: {},
+    extraReducers: (builder) => {
+        builder
+        .addCase(fetchPost.pending, (state) => {
             state.loading = true
-        },
-        [fetchPost.fulfilled]: (state: RepositoriesState, action) => {
+        })
+        .addCase(fetchPost.fulfilled, (state, action) => {
+            state.loading = false;
             state.data = action.payload;
+        })
+        .addCase(fetchPost.rejected, (state) => {
             state.loading = false;
-        },
-        [fetchPost.rejected]: (state: RepositoriesState, action) => {
-            state.loading = false;
-            state.error = action.payload;
-        }
+            state.error = "error in api";
+            state.data = [];
+        })
     }
 })
-
+export { fetchPost };
 export default repositorySlice.reducer;
